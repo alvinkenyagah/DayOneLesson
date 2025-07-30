@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Computer Literacy Quiz</title>
+    <!-- Tailwind CSS CDN for utility classes -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom CSS for specific styling beyond Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+        .quiz-container {
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* More rounded corners */
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 900px; /* Increased max-width for better layout */
+            width: 100%;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            position: relative;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-image: linear-gradient(to right, #6366f1, #8b5cf6); /* Purple gradient */
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-image: linear-gradient(to right, #4f46e5, #7c3aed);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-secondary {
+            background-color: #e2e8f0; /* Light gray */
+            color: #334155; /* Darker text */
+            border: 1px solid #cbd5e1;
+        }
+        .btn-secondary:hover {
+            background-color: #cbd5e1;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .option-button {
+            background-color: #f8fafc; /* Very light gray */
+            border: 1px solid #e2e8f0;
+            color: #334155;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .option-button:hover:not(.selected):not(.disabled) {
+            background-color: #eff6ff; /* Light blue on hover */
+            border-color: #93c5fd; /* Blue border on hover */
+            transform: translateY(-1px);
+        }
+        .option-button.selected {
+            border-color: #6366f1; /* Purple border for selected */
+            background-color: #e0e7ff; /* Lighter purple background */
+            font-weight: 600;
+        }
+        .option-button.correct {
+            background-color: #d1fae5; /* Light green for correct */
+            border-color: #34d399; /* Green border */
+            color: #065f46;
+            font-weight: 700;
+        }
+        .option-button.incorrect {
+            background-color: #fee2e2; /* Light red for incorrect */
+            border-color: #ef4444; /* Red border */
+            color: #991b1b;
+            font-weight: 700;
+        }
+        .option-button.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        /* Timer bar removed */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #ffffff;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+
+    <div class="quiz-container">
+        <!-- Start Screen -->
+        <div id="start-screen" class="flex flex-col items-center justify-center gap-6">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">Computer Literacy Quiz</h1>
+            <p class="text-lg text-gray-600 text-center">Test your knowledge on computer basics and web development fundamentals!</p>
+            <!-- Removed name input field and its label -->
+            <button id="start-quiz-btn" class="btn btn-primary w-full max-w-xs">Start Quiz</button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden flex-col gap-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-semibold text-gray-700">Question <span id="current-question-number">1</span>/15</h2>
+                <!-- Timer display removed -->
+            </div>
+            <!-- Timer bar container removed -->
+            <p id="question-text" class="text-xl font-medium text-gray-800 mb-6"></p>
+            <div id="answer-options" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <!-- Answer options will be injected here by JS -->
+            </div>
+            <button id="next-question-btn" class="btn btn-primary w-full max-w-xs mx-auto hidden">Next Question</button>
+            <button id="submit-quiz-btn" class="btn btn-primary w-full max-w-xs mx-auto hidden">Submit Quiz</button>
+            <p id="hint-text" class="text-sm text-gray-500 mt-2 text-center"></p>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="hidden flex-col items-center justify-center gap-6">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Quiz Complete!</h2>
+            <p class="text-xl text-gray-700">Your Score: <span id="final-score" class="font-bold text-blue-600"></span>/15</p>
+            <div id="score-details" class="w-full text-gray-700">
+                <h3 class="text-2xl font-semibold mb-4">Review Your Answers:</h3>
+                <div id="review-list" class="space-y-4 max-h-60 overflow-y-auto pr-2">
+                    <!-- Answer review will be injected here -->
+                </div>
+            </div>
+            <button id="restart-quiz-btn" class="btn btn-primary w-full max-w-xs">Play Again</button>
+        </div>
+    </div>
+
+    <!-- Custom Modal for Alerts -->
+    <div id="custom-modal" class="modal hidden">
+        <div class="modal-content">
+            <p id="modal-message" class="text-lg text-gray-800 mb-4"></p>
+            <button id="modal-close-btn" class="btn btn-primary">OK</button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Quiz Data
+        const quizQuestions = [
+            {
+                "question": "Which of the following is primarily an OUTPUT device?",
+                "hint": "Think about which device presents information from the computer to you.",
+                "answerOptions": [
+                    { "text": "Keyboard", "rationale": "A keyboard is used to put information into the computer.", "isCorrect": false },
+                    { "text": "Mouse", "rationale": "A mouse is used to send commands and selections into the computer.", "isCorrect": false },
+                    { "text": "Monitor", "rationale": "A monitor displays the visual results of the computer's processing.", "isCorrect": true },
+                    { "text": "Microphone", "rationale": "A microphone captures sound and sends it into the computer.", "isCorrect": false }
+                ]
+            },
+            {
+                "question": "What is the main function of a computer's CPU (Central Processing Unit)?",
+                "hint": "This component is often referred to as the 'brain' of the computer.",
+                "answerOptions": [
+                    { "text": "To store your files, photos, and games permanently.", "rationale": "Permanent file storage is the job of the hard drive (HDD or SSD).", "isCorrect": false },
+                    { "text": "To perform calculations and execute instructions.", "rationale": "The CPU's core responsibility is processing data and running programs.", "isCorrect": true },
+                    { "text": "To provide the computer with its short-term, active memory.", "rationale": "Short-term active memory is the function of RAM.", "isCorrect": false },
+                    { "text": "To display images and text on the screen.", "rationale": "Displaying content is the role of the monitor and graphics card.", "isCorrect": false }
+                ]
+            },
+            {
+                "question": "You have many applications and browser tabs open, and your computer starts to slow down. Which component is likely being used to its full capacity?",
+                "hint": "Consider which component handles the computer's active, short-term tasks.",
+                "answerOptions": [
+                    { "text": "RAM (Random Access Memory)", "rationale": "RAM is the computer's working memory; having too many active apps consumes it, causing slowdowns.", "isCorrect": true },
+                    { "text": "Hard Drive (SSD/HDD)", "rationale": "The hard drive is for long-term storage and is less directly impacted by the number of open apps.", "isCorrect": false },
+                    { "text": "CPU (Central Processing Unit)", "rationale": "While the CPU is working hard, the slowdown is most directly related to running out of active memory space.", "isCorrect": false },
+                    { "text": "The Operating System", "rationale": "The operating system manages resources, but the physical component being strained is the RAM.", "isCorrect": false }
+                ]
+            },
+            {
+                "question": "Which statement best describes the difference between hardware and software?",
+                "hint": "One of them you can physically touch, and the other you cannot.",
+                "answerOptions": [
+                    { "text": "Hardware is the physical components of a computer, while software is the set of instructions that tells the hardware what to do.", "rationale": "This correctly defines hardware as the tangible parts and software as the intangible programs.", "isCorrect": true },
+                    { "text": "Hardware is what you buy online, and software is what you buy in a store.", "rationale": "Both hardware and software can be purchased through various channels.", "isCorrect": false },
+                    { "text": "Hardware refers to the computer's monitor, while software refers to the keyboard.", "rationale": "Both the monitor and keyboard are examples of hardware.", "isCorrect": false },
+                    { "text": "Hardware runs applications, and software manages files.", "rationale": "Software (specifically, the OS) manages files, and hardware executes the software's instructions.", "isCorrect": false }
+                ]
+            },
+            {
+                "question": "What is the primary role of an Operating System (like Windows or macOS)?",
+                "hint": "It's the foundational program that allows you to interact with your computer and run other apps.",
+                "answerOptions": [
+                    { "text": "To browse the internet.", "rationale": "Browsing the internet is the job of a web browser application, like Chrome or Firefox.", "isCorrect": false },
+                    { "text": "To create text documents.", "rationale": "Creating text documents is done with a word processor application, like Word or Google Docs.", "isCorrect": false },
+                    { "text": "To manage the computer's hardware and software resources.", "rationale": "The OS acts as the manager for all computer functions, from files to applications.", "isCorrect": true },
+                    { "text": "To protect the computer from viruses.", "rationale": "While an OS has security features, specific antivirus software is dedicated to this task.", "isCorrect": false }
+                ]
+            },
+            {
+                "question": "You are trying to organize your files. What is the best first step?",
+                "hint": "Think about how you would organize physical papers in a filing cabinet.",
+                "answerOptions": [
+                    { "text": "Rename every file with a random number.", "rationale": "Random numbers would make it very difficult to find specific files later.", "isCorrect": false },
+                    { "text": "Save every single file directly to the Desktop.", "rationale": "This would quickly lead to a cluttered and disorganized workspace.", "isCorrect": false },
+                    { "text": "Create folders for different categories (e.g., 'Schoolwork', 'Photos').", "rationale": "Using folders to group related items is the fundamental principle of file organization.", "isCorrect": true },
+                    { "text": "Delete any file that is more than a week old.", "rationale": "This could result in losing important information that you still need.", "isCorrect": false }
+                ]
+            },
+            {
+                "question": "Which of the following is the STRONGEST password?",
+                "hint": "A strong password uses a mix of different character types and is not easily guessable.",
+                "answerOptions": [
+                    { "text": "password123", "rationale": "This uses common words and a simple number sequence, making it easy to guess.", "isCorrect": false },
+                    { "text": "MyDogSpot", "rationale": "This password uses personal information that could be known by others.", "isCorrect": false },
+                    { "text": "12345678", "rationale": "This is a very common and simple numeric sequence.", "isCorrect": false },
+                    { "text": "Gr8!pL@n#t", "rationale": "This password includes upper and lower case letters, numbers, and symbols, making it complex.", "isCorrect": true }
+                ]
+            },
+            {
+                "question": "You receive an email with a subject line 'URGENT: Your Account is Locked!' that asks you to click a link and enter your password. This is a common example of what?",
+                "hint": "This is a type of online scam designed to 'fish' for your personal information.",
+                "answerOptions": [
+                    { "text": "Phishing", "rationale": "Phishing attempts use deceptive messages to trick people into revealing sensitive information.", "isCorrect": true },
+                    { "text": "Cyberbullying", "rationale": "Cyberbullying involves harassment or intimidation, not trickery to steal data.", "isCorrect": false },
+                    { "text": "Netiquette", "rationale": "Netiquette refers to good online manners; this email is an example of bad behavior.", "isCorrect": false },
+                    { "text": "A software update", "rationale": "Legitimate software updates typically do not ask for your password via an urgent email link.", "isCorrect": false }
+                ]
+            },
+            {
+                "question": "What is the best immediate action to take if you see someone being cyberbullied?",
+                "hint": "The goal is to stop the harmful interaction and alert someone who can help, without engaging the bully.",
+                "answerOptions": [
+                    { "text": "Write a mean comment back to the bully.", "rationale": "Engaging with the bully often escalates the situation.", "isCorrect": false },
+                    { "text": "Share the mean comments with all of your friends.", "rationale": "This can spread the hurtful content further and cause more harm.", "isCorrect": false },
+                    { "text": "Ignore it completely and pretend you didn't see it.", "rationale": "While you shouldn't engage the bully, ignoring it doesn't help the person being targeted.", "isCorrect": false },
+                    { "text": "Report the behavior to the platform and block the bully.", "rationale": "Reporting and blocking are the most effective first steps to stop the behavior and enforce community rules.", "isCorrect": true }
+                ]
+            },
+            {
+                "question": "The letters at the end of a filename after a dot (like .txt, .jpg, or .mp3) are called the file extension. What is their purpose?",
+                "hint": "This part of the filename gives a clue about what's inside.",
+                "answerOptions": [
+                    { "text": "To tell the operating system what type of file it is and which app to use to open it.", "rationale": "The extension is a key identifier that associates a file with a specific program.", "isCorrect": true },
+                    { "text": "To show how large the file is.", "rationale": "File size is a property of the file, but it is not indicated by the extension.", "isCorrect": false },
+                    { "text": "To hide the file from other users.", "rationale": "File extensions are for identification, not for security or hiding files.", "isCorrect": false },
+                    { "text": "To indicate who created the file.", "rationale": "The file's metadata might contain author information, but the extension does not.", "isCorrect": false }
+                ]
+            },
+            {
+                "question": "Which of these is a common web browser used to access websites?",
+                "hint": "This software allows you to 'surf' the internet.",
+                "answerOptions": [
+                    { "text": "Microsoft Word", "rationale": "Microsoft Word is a word processing application, not a web browser.", "isCorrect": false },
+                    { "text": "Google Chrome", "rationale": "Google Chrome is a popular web browser used to view websites.", "isCorrect": true },
+                    { "text": "Adobe Photoshop", "rationale": "Adobe Photoshop is an image editing software, not for browsing the web.", "isCorrect": false },
+                    { "text": "VLC Media Player", "rationale": "VLC Media Player is used for playing audio and video files, not for web browsing.", "isCorrect": false }
+                ]
+            },
+            {
+                "question": "When organizing files, what is the best practice for keeping related documents together?",
+                "hint": "Think about how you'd sort physical papers into different categories.",
+                "answerOptions": [
+                    { "text": "Save all files directly to the desktop for quick access.", "rationale": "Saving all files to the desktop can quickly lead to clutter and disorganization.", "isCorrect": false },
+                    { "text": "Delete files regularly to free up space.", "rationale": "Deleting files without proper review can lead to loss of important data.", "isCorrect": false },
+                    { "text": "Create specific folders and subfolders for different topics or projects.", "rationale": "Using a hierarchical folder structure is the most effective way to organize and locate files.", "isCorrect": true },
+                    { "text": "Rename files with only numbers to keep them short.", "rationale": "Using only numbers makes it difficult to understand the content of the file at a glance.", "isCorrect": false }
+                ]
+            },
+            {
+                "question": "What is a key rule of 'netiquette' when communicating online?",
+                "hint": "Consider how you would behave respectfully in a face-to-face conversation.",
+                "answerOptions": [
+                    { "text": "Always use all capital letters to emphasize your points.", "rationale": "Using all caps online is often interpreted as shouting and is considered rude.", "isCorrect": false },
+                    { "text": "Share personal information about others without their permission.", "rationale": "Sharing private information about others without consent is a violation of privacy and bad netiquette.", "isCorrect": false },
+                    { "text": "Be respectful and considerate of others' opinions, even if you disagree.", "rationale": "Respect and consideration are fundamental principles of good online communication and netiquette.", "isCorrect": true },
+                    { "text": "Post anything you want, regardless of how it might affect others.", "rationale": "Posting without considering the impact on others can lead to negative consequences and is poor netiquette.", "isCorrect": false }
+                ]
+            },
+            {
+                "question": "Which of the following is a good way to determine if information found online is credible?",
+                "hint": "Think about the source and how the information is presented.",
+                "answerOptions": [
+                    { "text": "It has many likes or shares on social media.", "rationale": "Popularity on social media does not guarantee the accuracy or credibility of information.", "isCorrect": false },
+                    { "text": "The website has a lot of advertisements.", "rationale": "The presence of advertisements does not indicate the credibility of the content.", "isCorrect": false },
+                    { "text": "The information is presented without any sources or references.", "rationale": "Lack of sources makes it difficult to verify the information and reduces its credibility.", "isCorrect": false },
+                    { "text": "The website's author or organization is clearly identified and reputable.", "rationale": "Identifying a credible author or organization is a strong indicator of reliable information.", "isCorrect": true }
+                ]
+            },
+            {
+                "question": "Which type of online tool allows multiple people to work on the same document simultaneously?",
+                "hint": "These tools are designed for real-time teamwork on files.",
+                "answerOptions": [
+                    { "text": "A standalone word processing application (e.g., Microsoft Word installed on your computer).", "rationale": "Standalone applications typically do not support real-time collaborative editing unless integrated with cloud services.", "isCorrect": false },
+                    { "text": "An email client for sending messages.", "rationale": "Email clients are for sending messages, not for real-time document collaboration.", "isCorrect": false },
+                    { "text": "Online collaboration platforms (e.g., Google Docs, Microsoft 365 online).", "rationale": "Online collaboration platforms are specifically designed for multiple users to edit documents simultaneously.", "isCorrect": true },
+                    { "text": "A photo editing software.", "rationale": "Photo editing software is for image manipulation, not for collaborative document creation.", "isCorrect": false }
+                ]
+            }
+        ];
+
+        // DOM Elements
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultsScreen = document.getElementById('results-screen');
+
+        const userNameInput = document.getElementById('user-name'); // This element is now removed from HTML
+        const startQuizBtn = document.getElementById('start-quiz-btn');
+        const currentQuestionNumberSpan = document.getElementById('current-question-number');
+        const questionText = document.getElementById('question-text');
+        const answerOptionsDiv = document.getElementById('answer-options');
+        const nextQuestionBtn = document.getElementById('next-question-btn');
+        const submitQuizBtn = document.getElementById('submit-quiz-btn');
+        const hintText = document.getElementById('hint-text');
+        const finalScoreSpan = document.getElementById('final-score');
+        const reviewListDiv = document.getElementById('review-list');
+        const restartQuizBtn = document.getElementById('restart-quiz-btn');
+
+        const customModal = document.getElementById('custom-modal');
+        const modalMessage = document.getElementById('modal-message');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        // Quiz State Variables
+        let currentQuestionIndex = 0;
+        let score = 0;
+        // Removed userName variable as it's no longer needed
+        let userAnswers = []; // To store user's selected answer for review
+        let shuffledQuizQuestions = []; // To store shuffled questions for the current quiz session
+
+        // --- UI Management Functions ---
+        function showScreen(screenId) {
+            startScreen.classList.add('hidden');
+            quizScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+
+            const screen = document.getElementById(screenId);
+            if (screen) {
+                screen.classList.remove('hidden');
+                screen.classList.add('flex'); // Ensure flex display for correct layout
+            }
+        }
+
+        function showModal(message) {
+            modalMessage.textContent = message;
+            customModal.classList.remove('hidden');
+        }
+
+        modalCloseBtn.addEventListener('click', () => {
+            customModal.classList.add('hidden');
+        });
+
+        // --- Quiz Logic Functions ---
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startQuiz() {
+            // Removed userName validation check
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+            shuffledQuizQuestions = shuffleArray([...quizQuestions]); // Shuffle questions for each new quiz
+            showScreen('quiz-screen');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= shuffledQuizQuestions.length) {
+                endQuiz();
+                return;
+            }
+
+            const questionData = shuffledQuizQuestions[currentQuestionIndex];
+            currentQuestionNumberSpan.textContent = currentQuestionIndex + 1;
+            document.querySelector('#quiz-screen h2 span:last-child').textContent = `/${shuffledQuizQuestions.length}`;
+            questionText.textContent = questionData.question;
+            hintText.textContent = `Hint: ${questionData.hint}`;
+            answerOptionsDiv.innerHTML = ''; // Clear previous options
+
+            const shuffledOptions = shuffleArray([...questionData.answerOptions]);
+
+            shuffledOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.classList.add('option-button');
+                button.textContent = option.text;
+                button.dataset.isCorrect = option.isCorrect;
+                button.dataset.rationale = option.rationale; // Store rationale for review
+                button.addEventListener('click', () => selectAnswer(button, option.isCorrect));
+                answerOptionsDiv.appendChild(button);
+            });
+
+            nextQuestionBtn.classList.add('hidden');
+            submitQuizBtn.classList.add('hidden'); // Hide submit until last question
+        }
+
+        function selectAnswer(selectedButton, isCorrect) {
+            const allOptionButtons = answerOptionsDiv.querySelectorAll('.option-button');
+            allOptionButtons.forEach(button => {
+                button.classList.add('disabled');
+                button.removeEventListener('click', () => {}); // Remove event listener
+            });
+
+            selectedButton.classList.add('selected');
+
+            userAnswers[currentQuestionIndex] = {
+                question: shuffledQuizQuestions[currentQuestionIndex].question,
+                selectedOption: selectedButton.textContent,
+                isCorrect: isCorrect,
+                correctAnswer: shuffledQuizQuestions[currentQuestionIndex].answerOptions.find(opt => opt.isCorrect).text,
+                rationale: selectedButton.dataset.rationale
+            };
+
+            if (isCorrect) {
+                score++;
+                selectedButton.classList.add('correct');
+            } else {
+                selectedButton.classList.add('incorrect');
+                allOptionButtons.forEach(button => {
+                    if (button.dataset.isCorrect === 'true') {
+                        button.classList.add('correct');
+                    }
+                });
+            }
+
+            if (currentQuestionIndex < shuffledQuizQuestions.length - 1) {
+                nextQuestionBtn.classList.remove('hidden');
+            } else {
+                submitQuizBtn.classList.remove('hidden');
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        function endQuiz() {
+            showScreen('results-screen');
+            finalScoreSpan.textContent = score;
+            document.querySelector('#results-screen p span:last-child').textContent = `/${shuffledQuizQuestions.length}`;
+            displayAnswerReview();
+        }
+
+        function displayAnswerReview() {
+            reviewListDiv.innerHTML = '';
+            userAnswers.forEach((answer, index) => {
+                const questionReview = document.createElement('div');
+                questionReview.classList.add('p-3', 'rounded-lg', 'shadow-sm', 'mb-2', answer.isCorrect ? 'bg-green-50' : 'bg-red-50');
+                questionReview.innerHTML = `
+                    <p class="font-semibold text-gray-800">Q${index + 1}: ${answer.question}</p>
+                    <p class="${answer.isCorrect ? 'text-green-600' : 'text-red-600'}">Your Answer: ${answer.selectedOption} ${answer.isCorrect ? '&#10003;' : '&#10007;'}</p>
+                    ${!answer.isCorrect ? `<p class="text-green-600">Correct Answer: ${answer.correctAnswer}</p>` : ''}
+                    <p class="text-sm text-gray-600">Rationale: ${answer.rationale}</p>
+                `;
+                reviewListDiv.appendChild(questionReview);
+            });
+        }
+
+        // --- Event Listeners ---
+        startQuizBtn.addEventListener('click', startQuiz);
+        nextQuestionBtn.addEventListener('click', nextQuestion);
+        submitQuizBtn.addEventListener('click', endQuiz);
+        restartQuizBtn.addEventListener('click', () => showScreen('start-screen'));
+
+        // Initial setup
+        window.onload = () => {
+            showScreen('start-screen'); // Show start screen initially
+        };
+    </script>
+</body>
+</html>
