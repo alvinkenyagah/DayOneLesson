@@ -128,17 +128,14 @@
         <div id="start-screen" class="flex flex-col items-center justify-center gap-6">
             <h1 class="text-4xl font-bold text-gray-800 mb-4">Computer Literacy Quiz</h1>
             <p class="text-lg text-gray-600 text-center">Test your knowledge on computer basics and web development fundamentals!</p>
-            <!-- Removed name input field and its label -->
             <button id="start-quiz-btn" class="btn btn-primary w-full max-w-xs">Start Quiz</button>
         </div>
 
         <!-- Quiz Screen -->
         <div id="quiz-screen" class="hidden flex-col gap-6">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-semibold text-gray-700">Question <span id="current-question-number">1</span>/15</h2>
-                <!-- Timer display removed -->
+                <h2 class="text-2xl font-semibold text-gray-700">Question <span id="current-question-number">1</span>/<span id="total-questions">15</span></h2>
             </div>
-            <!-- Timer bar container removed -->
             <p id="question-text" class="text-xl font-medium text-gray-800 mb-6"></p>
             <div id="answer-options" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <!-- Answer options will be injected here by JS -->
@@ -151,7 +148,7 @@
         <!-- Results Screen -->
         <div id="results-screen" class="hidden flex-col items-center justify-center gap-6">
             <h2 class="text-3xl font-bold text-gray-800 mb-4">Quiz Complete!</h2>
-            <p class="text-xl text-gray-700">Your Score: <span id="final-score" class="font-bold text-blue-600"></span>/15</p>
+            <p class="text-xl text-gray-700">Your Score: <span id="final-score" class="font-bold text-blue-600"></span>/<span id="results-total-questions">15</span></p>
             <div id="score-details" class="w-full text-gray-700">
                 <h3 class="text-2xl font-semibold mb-4">Review Your Answers:</h3>
                 <div id="review-list" class="space-y-4 max-h-60 overflow-y-auto pr-2">
@@ -330,15 +327,16 @@
         const quizScreen = document.getElementById('quiz-screen');
         const resultsScreen = document.getElementById('results-screen');
 
-        const userNameInput = document.getElementById('user-name'); // This element is now removed from HTML
         const startQuizBtn = document.getElementById('start-quiz-btn');
         const currentQuestionNumberSpan = document.getElementById('current-question-number');
+        const totalQuestionsSpan = document.getElementById('total-questions');
         const questionText = document.getElementById('question-text');
         const answerOptionsDiv = document.getElementById('answer-options');
         const nextQuestionBtn = document.getElementById('next-question-btn');
         const submitQuizBtn = document.getElementById('submit-quiz-btn');
         const hintText = document.getElementById('hint-text');
         const finalScoreSpan = document.getElementById('final-score');
+        const resultsTotalQuestionsSpan = document.getElementById('results-total-questions');
         const reviewListDiv = document.getElementById('review-list');
         const restartQuizBtn = document.getElementById('restart-quiz-btn');
 
@@ -349,7 +347,6 @@
         // Quiz State Variables
         let currentQuestionIndex = 0;
         let score = 0;
-        // Removed userName variable as it's no longer needed
         let userAnswers = []; // To store user's selected answer for review
         let shuffledQuizQuestions = []; // To store shuffled questions for the current quiz session
 
@@ -386,7 +383,6 @@
         }
 
         function startQuiz() {
-            // Removed userName validation check
             currentQuestionIndex = 0;
             score = 0;
             userAnswers = [];
@@ -403,17 +399,19 @@
 
             const questionData = shuffledQuizQuestions[currentQuestionIndex];
             currentQuestionNumberSpan.textContent = currentQuestionIndex + 1;
-            document.querySelector('#quiz-screen h2 span:last-child').textContent = `/${shuffledQuizQuestions.length}`;
+            totalQuestionsSpan.textContent = shuffledQuizQuestions.length;
             questionText.textContent = questionData.question;
             hintText.textContent = `Hint: ${questionData.hint}`;
             answerOptionsDiv.innerHTML = ''; // Clear previous options
 
             const shuffledOptions = shuffleArray([...questionData.answerOptions]);
+            const labels = ['A', 'B', 'C', 'D']; // Labels for answer options
 
-            shuffledOptions.forEach(option => {
+            shuffledOptions.forEach((option, index) => {
                 const button = document.createElement('button');
                 button.classList.add('option-button');
-                button.textContent = option.text;
+                // Prepend the label to the option text
+                button.textContent = `${labels[index]}. ${option.text}`;
                 button.dataset.isCorrect = option.isCorrect;
                 button.dataset.rationale = option.rationale; // Store rationale for review
                 button.addEventListener('click', () => selectAnswer(button, option.isCorrect));
@@ -435,7 +433,8 @@
 
             userAnswers[currentQuestionIndex] = {
                 question: shuffledQuizQuestions[currentQuestionIndex].question,
-                selectedOption: selectedButton.textContent,
+                // Store the text without the label for cleaner review display
+                selectedOption: selectedButton.textContent.substring(3), // Remove "A. ", "B. " etc.
                 isCorrect: isCorrect,
                 correctAnswer: shuffledQuizQuestions[currentQuestionIndex].answerOptions.find(opt => opt.isCorrect).text,
                 rationale: selectedButton.dataset.rationale
@@ -468,7 +467,7 @@
         function endQuiz() {
             showScreen('results-screen');
             finalScoreSpan.textContent = score;
-            document.querySelector('#results-screen p span:last-child').textContent = `/${shuffledQuizQuestions.length}`;
+            resultsTotalQuestionsSpan.textContent = shuffledQuizQuestions.length;
             displayAnswerReview();
         }
 
